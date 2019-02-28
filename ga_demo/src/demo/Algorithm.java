@@ -1,7 +1,5 @@
 package demo;
 
-import demo.Individual;
-
 public class Algorithm {
 	private static int popsize = 50;
 	private static int generation = 400;
