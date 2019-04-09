@@ -2,8 +2,9 @@ package demo;
 
 public class Algorithm {
 	private static int popsize = 50;
-	private static int generation = 400;
-	private static double mutationRate = 0.1; // xác suất  mutation
+	private static int generation = 100;
+	private static double Pc = 0.5;
+	private static double mutationRate = 0.1; // xác suất mutation
 	private static double uniformRate = 0.5; // xác suất 1 gene được truyền cho con
 
 	public static void main(String[] args) {
@@ -11,7 +12,7 @@ public class Algorithm {
 		Individual[] current = new Individual[popsize];
 		for (int i = 0; i < popsize; i++) {
 			Individual newIndividual = new Individual();
-			newIndividual.generateIndividual(); ///  random ca the
+			newIndividual.generateIndividual(); /// random ca the
 			current[i] = newIndividual;
 			System.out.println(newIndividual);
 		}
@@ -53,7 +54,7 @@ public class Algorithm {
 	// Select individuals for crossover
 	private static Individual tournamentSelection(Individual[] parent) {
 		// Create a tournament population
-		int tournamentSize = 10;
+		int tournamentSize = 50;
 		Individual[] tournament = new Individual[tournamentSize];
 		// For each place in the tournament get a random individual
 		for (int i = 0; i < tournamentSize; i++) {
@@ -71,13 +72,16 @@ public class Algorithm {
 		return fittest;
 	}
 
-	public static Individual[] evolvePopulation(Individual[] parent) {
+	public static Individual[] evolvePopulation(Individual[] parent	) {
 		Individual[] child = new Individual[popsize];
 		for (int i = 0; i < popsize; i++) {
 			Individual indiv1 = tournamentSelection(parent); // chon loc bo me
 			Individual indiv2 = tournamentSelection(parent);
-			Individual newIndiv = crossover(indiv1, indiv2); // lai ghep
-			child[i] = newIndiv;
+			if (Math.random() <= Pc) {
+//				i++;
+				Individual newIndiv = crossover(indiv1, indiv2); // lai ghep
+				child[i] = newIndiv;
+			}
 		}
 
 		// Mutate population
@@ -86,13 +90,24 @@ public class Algorithm {
 		}
 		Individual best = child[0];
 		double max = child[0].getFitness();
+		
+		for (int i = 0; i < parent.length; i++) {
+			for (int j = 0; j < child.length; j++) {
+				if (child[j].getFitness() < parent[i].getFitness()) {
+					child[j]=parent[i];
+					break;
+				}
+			}
+		}
+		
+		
 		for (int i = 0; i < popsize; i++) {
 			if (max > child[i].getFitness())
 				continue;
 			max = child[i].getFitness();
 			best = child[i];
 		}
-
+		
 		System.out.println(best + " f(x)=" + max);
 		return child;
 	}
