@@ -1,16 +1,19 @@
 package mfea;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import mfea.Individual;
 
 public class Algorithm {
 	private static int popsize = 30;
-	private static int generation = 2000;
-	private static double rmp = 0.2;
-	private static double mutationRate = 0.3; // xác suất mutation
+	private static int generation = 1000;
+	private static double rmp = 0.3;
+	private static double mutationRate = 0.4; // xác suất mutation
 	private static double uniformRate = 0.5; // xác suất 1 gene được truyền cho con
+	static List<Comparator<Individual>> compare = Arrays.asList(new Compare1(),new Compare2(),new Compare3());
 
 	public static void main(String[] args) {
 		// init population
@@ -21,12 +24,10 @@ public class Algorithm {
 			current.add(newIndividual);
 //			System.out.println(newIndividual);
 		}
-		Collections.sort(current, new Compare1());
-		for (int i = 0; i < popsize; i++) {current.get(i).rank[0] = i;}
-		Collections.sort(current, new Compare2());
-		for (int i = 0; i < popsize; i++) {current.get(i).rank[1] = i;}
-		Collections.sort(current, new Compare3());
-		for (int i = 0; i < popsize; i++) {current.get(i).rank[2] = i;}
+		for (int i = 0; i < 3; i++) {
+			Collections.sort(current, compare.get(i));
+			for (int j = 0; j < popsize; j++) {current.get(j).rank[i] = j;}
+		}
 		
 		for (int i = 0; i < popsize; i++) {
 			Individual x = current.get(i);
@@ -60,7 +61,9 @@ public class Algorithm {
 		}
 		if (Math.random()<0.5) task = indiv1.skill_factor;
 		else task = indiv2.skill_factor;
-		newSol.setGene(gene, task);
+		newSol.skill_factor=task;
+		newSol.setGene(gene);
+		newSol.calFitness(task);
 		return newSol;
 	}
 
@@ -75,7 +78,9 @@ public class Algorithm {
 				gene[i] = (byte) Math.round(Math.random());
 			}
 		}
-		newSol.setGene(gene, indiv.skill_factor);
+		newSol.setGene(gene);
+		newSol.skill_factor=indiv.skill_factor;
+		newSol.calFitness(indiv.skill_factor);
 		return newSol;
 	}
 
@@ -102,24 +107,22 @@ public class Algorithm {
 			parent.add(child2);
 			
 		}
-		Collections.sort(parent, new Compare1());
-		for (int i = 0; i < 2*popsize; i++) {parent.get(i).rank[0] = i;}
-		double best1= parent.get(0).getFitness(0);
-		Collections.sort(parent, new Compare2());
-		for (int i = 0; i < 2*popsize; i++) {parent.get(i).rank[1] = i;}
-		double best2= parent.get(0).getFitness(1);
-		Collections.sort(parent, new Compare3());
-		for (int i = 0; i < 2*popsize; i++) {parent.get(i).rank[2] = i;}
-		double best3= parent.get(0).getFitness(2);
-		int k = parent.get(0).scalar_fitness;
+		double best[] = new double[3];
+		for (int i = 0; i < 3; i++) {
+			Collections.sort(parent, compare.get(i));
+			for (int j = 0; j < parent.size(); j++) {parent.get(j).rank[i] = j;}
+			best[i]= parent.get(0).getFitness(i);
+		}
 
-		for (int i = 0; i < 2*popsize; i++) {
+
+		for (int i = 0; i < parent.size(); i++) {
 			Individual x = parent.get(i);
-			int max = 100;
+			int max = 10000;
 			for (int j = 0; j < 3; j++) {
 				if (max>x.rank[j]) {max = x.rank[j]; x.skill_factor=j;}
 			}
 			x.scalar_fitness=max;
+			
 		}
 		Collections.sort(parent, new CompareSkill());
 		List<Individual> next = new ArrayList<>();
@@ -127,7 +130,7 @@ public class Algorithm {
 				next.add(parent.get(i));
 //				System.out.print(parent.get(i).scalar_fitness+" ");
 		}
-		System.out.println(best1 + " " + best2 +" "+ best3);
+		System.out.println(best[0]+ " " + best[1] +" "+ best[2]);
 		return next;
 	}
 }
